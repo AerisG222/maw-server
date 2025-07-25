@@ -1,0 +1,14 @@
+# narrowly focused ansible deployment playbook to configure ddclient
+---
+- name: Configure SSH
+  hosts: sshd_servers
+  become: true
+
+  tasks:
+    - name: Configure sshd
+      ansible.builtin.import_role:
+        name: sshd
+      vars:
+        sshd_allow_users:
+          - "{{ ansible_user }}"
+      when: ansible_connection != 'local'
