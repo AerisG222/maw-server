@@ -1,0 +1,97 @@
+# narrowly focused ansible deployment playbook to configure ddclient
+---
+- name: Configure Service Account
+  hosts: ddclient_servers
+  become: true
+
+  tasks:
+    - name: Add Service Account
+      ansible.builtin.user:
+        name: "{{ svcacct_name }}"
+        password: "{{ svcacct_pwd | password_hash('sha512') }}"
+        update_password: always
+        state: present
+
+    - name: Enable Linger for Service Account
+      ansible.builtin.command:
+        cmd: loginctl enable-linger "{{ svcacct_name | quote }}"
+
+    - name: Add SSH key to authorized_keys
+      ansible.posix.authorized_key:
+        user: "{{ svcacct_name }}"
+        key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/id_rsa.pub') }}"
+        state: present
+
+- name: Configure ddclient
+  hosts: ddclient_servers
+  remote_user: "{{ svcacct_name }}"
+  vars:
+    pod: pod-ddclient
+    img_ddclient: docker.io/linuxserver/ddclient:latest
+    dir_localroot: "{{ lookup('env', 'HOME') }}/maw-server/ansible/ddclient"
+    dir_config: "/home/{{ svcacct_name }}/ddclient-config"
+
+  tasks:
+    - name: Create Directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: directory
+      loop:
+        - "{{ dir_config }}"
+
+    - name: Copy Files
+      ansible.builtin.copy:
+        src: "{{ item.src }}"
+        dest: "{{ item.dest }}"
+        mode: u+rw
+      loop:
+        - src: "{{ dir_localroot }}/ddclient.conf"
+          dest: "{{ dir_config }}"
+
+    - name: Pull Container Images
+      containers.podman.podman_image:
+        name: "{{ item }}"
+      loop:
+        - "{{ img_ddclient }}"
+
+    - name: Create Pod Quadlet
+      containers.podman.podman_pod:
+        name: "{{ pod }}"
+        state: quadlet
+        quadlet_options:
+          - "ServiceName={{ pod }}"
+
+    - name: Create ddclient Quadlet
+      containers.podman.podman_container:
+        name: ddclient
+        image: "{{ img_ddclient }}"
+        state: quadlet
+        read_only: true
+        pod: "{{ pod }}.pod"
+        userns: "keep-id:uid=1654"
+        env:
+          PUID: 1654
+          TZ: "US/Eastern"
+        mounts:
+          - type=tmpfs,destination=/tmp
+        volumes:
+          - "{{ dir_config }}:/config:Z"
+        quadlet_options:
+          - "AutoUpdate=registry"
+          - "Pull=newer"
+          - "ReadOnly=true"
+          - |
+
+            [Unit]
+            Description=Container for ddclient
+
+            [Install]
+            WantedBy=multi-user.target default.target
+
+    - name: Start and Enable Pod / Containers
+      ansible.builtin.systemd_service:
+        daemon_reload: true
+        name: "{{ pod }}.service"
+        scope: user
+        enabled: true
+        state: restarted
