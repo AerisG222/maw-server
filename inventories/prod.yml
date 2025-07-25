@@ -1,7 +1,3 @@
 ddclient_servers:
   hosts:
     chocobo:
-
-sshd_servers:
-  hosts:
-    chocobo:
