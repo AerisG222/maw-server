@@ -1,4 +1,4 @@
-# narrowly focused ansible deployment playbook to configure ddclient
+# narrowly focused ansible deployment playbook to prepare server for hosting our sites
 ---
 - name: Configure Server
   hosts: all
@@ -23,3 +23,11 @@
       loop:
         - http
         - https
+
+    - name: Install Required Packages
+      become: true
+      ansible.builtin.dnf:
+        name: "{{ item }}"
+        state: latest
+      loop:
+        - podman

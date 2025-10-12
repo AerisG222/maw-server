@@ -1,3 +1,5 @@
 ddclient_servers:
   hosts:
     chocobo:
+      ansible_user: mmorano
+      ansible_connection: ssh

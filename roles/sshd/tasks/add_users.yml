@@ -1,7 +1,7 @@
 ---
-- name: add ssh public keys
+- name: Add ssh public keys
   become: true
-  ansible.builtin.authorized_key:
+  ansible.posix.authorized_key:
     user: "{{ _sshd__allow_user }}"
     state: present
     key: "{{ lookup('file', lookup('env','HOME') + '/.ssh/id_ed25519.pub') }}"
@@ -9,7 +9,7 @@
 # the following 2 tasks work in tandem:
 #   the first will try to find the current user in the AllowUsers line
 #   the second will add the user if grep returns 1 indicating the line did not match
-- name: check if user is allowed in sshd_config
+- name: Check if user is allowed in sshd_config
   become: true
   ansible.builtin.command:
     argv:
@@ -21,7 +21,7 @@
   failed_when: grep_allowusers.rc != 0 and grep_allowusers.rc != 1
   register: grep_allowusers
 
-- name: add user to sshd AllowUsers
+- name: Add user to sshd AllowUsers
   become: true
   ansible.builtin.lineinfile:
     path: "/etc/ssh/sshd_config"
@@ -39,11 +39,11 @@
 - name: Flush handlers
   ansible.builtin.meta: flush_handlers
 
-- name: set current ssh server
+- name: Set current ssh server
   ansible.builtin.set_fact:
     current_ssh_server: "{{ ansible_host }}"
 
-- name: validate ssh
+- name: Validate ssh
   delegate_to: localhost
   become: false
   ansible.builtin.command:
@@ -51,7 +51,7 @@
   register: validate_ssh_output
   changed_when: false
 
-- name: validate ssh output
+- name: Validate ssh output
   ansible.builtin.fail:
     msg: Could not confirm SSH connectivity
   when: validate_ssh_output.stdout != "success"

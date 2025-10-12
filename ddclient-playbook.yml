@@ -24,7 +24,8 @@
 
 - name: Configure ddclient
   hosts: ddclient_servers
-  remote_user: "{{ svcacct_name }}"
+  become: yes
+  become_user: "{{ svcacct_name }}"
   vars:
     pod: pod-ddclient
     img_ddclient: docker.io/linuxserver/ddclient:latest
@@ -58,6 +59,7 @@
       containers.podman.podman_pod:
         name: "{{ pod }}"
         state: quadlet
+        userns: "keep-id:uid=1654"
         quadlet_options:
           - "ServiceName={{ pod }}"
 
@@ -68,7 +70,6 @@
         state: quadlet
         read_only: true
         pod: "{{ pod }}.pod"
-        userns: "keep-id:uid=1654"
         env:
           PUID: 1654
           TZ: "US/Eastern"
