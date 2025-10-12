@@ -1,0 +1,24 @@
+{
+    "ansible.python.interpreterPath": "/home/mmorano/git/maw-server/.venv/bin/python",
+    "workbench.colorCustomizations": {
+        "activityBar.activeBackground": "#d90000",
+        "activityBar.background": "#d90000",
+        "activityBar.foreground": "#e7e7e7",
+        "activityBar.inactiveForeground": "#e7e7e799",
+        "activityBarBadge.background": "#00bf00",
+        "activityBarBadge.foreground": "#e7e7e7",
+        "commandCenter.border": "#e7e7e799",
+        "sash.hoverBorder": "#d90000",
+        "statusBar.background": "#a60000",
+        "statusBar.foreground": "#e7e7e7",
+        "statusBarItem.hoverBackground": "#d90000",
+        "statusBarItem.remoteBackground": "#a60000",
+        "statusBarItem.remoteForeground": "#e7e7e7",
+        "tab.activeBorder": "#d90000",
+        "titleBar.activeBackground": "#a60000",
+        "titleBar.activeForeground": "#e7e7e7",
+        "titleBar.inactiveBackground": "#a6000099",
+        "titleBar.inactiveForeground": "#e7e7e799"
+    },
+    "peacock.color": "#a60000"
+}
