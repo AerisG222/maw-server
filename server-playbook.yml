@@ -13,6 +13,12 @@
           - "{{ ansible_user }}"
       when: ansible_connection != 'local'
 
+    - name: Permit rootless users to listen on low ports
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_unprivileged_port_start
+        value: 80
+        state: present
+
     - name: Configure Firewall Allowlist
       ansible.posix.firewalld:
         immediate: true
@@ -21,8 +27,8 @@
         state: enabled
         zone: FedoraServer
       loop:
-        - 8000/tcp
-        - 8443/tcp
+        - 80/tcp
+        - 443/tcp
 
     - name: Install Required Packages
       become: true
