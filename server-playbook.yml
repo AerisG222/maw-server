@@ -17,12 +17,12 @@
       ansible.posix.firewalld:
         immediate: true
         permanent: true
-        service: "{{ item }}"
+        port: "{{ item }}"
         state: enabled
         zone: FedoraServer
       loop:
-        - http
-        - https
+        - 8000/tcp
+        - 8443/tcp
 
     - name: Install Required Packages
       become: true
