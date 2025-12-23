@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  annotations:
+    bind-mount-options: {{ dir_config }}:Z
+    io.podman.annotations.userns: keep-id:uid=1654
+  labels:
+    app: {{ pod }}
+  name: {{ pod }}
+spec:
+  containers:
+    - image: {{ img_ddclient }}
+      imagePullPolicy: IfNotPresent
+      name: ddclient
+      env:
+        - name: PUID
+          value: "1654"
+        - name: TZ
+          value: US/Eastern
+      securityContext:
+        readOnlyRootFilesystem: true
+        runAsGroup: 1001
+        runAsUser: 1654
+      volumeMounts:
+        - mountPath: /tmp
+          name: tmp
+        - mountPath: /config
+          name: config
+  volumes:
+    - emptyDir:
+        medium: Memory
+      name: tmp
+    - hostPath:
+        path: {{ dir_config }}
+        type: Directory
+      name: config

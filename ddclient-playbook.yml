@@ -30,7 +30,10 @@
     pod: pod-ddclient
     img_ddclient: docker.io/linuxserver/ddclient:latest
     dir_localroot: "{{ lookup('env', 'HOME') }}/maw-server/ansible/ddclient"
-    dir_config: "/home/{{ svcacct_name }}/ddclient-config"
+    dir_config: "/home/{{ svcacct_name }}/ddclient/config"
+    dir_kube: "/home/{{ svcacct_name }}/ddclient/kube"
+    file_config: "{{ dir_config }}/ddclient.conf"
+    file_kube: "{{ dir_kube }}/kube.yml"
 
   tasks:
     - name: Create Directories
@@ -39,48 +42,28 @@
         state: directory
       loop:
         - "{{ dir_config }}"
+        - "{{ dir_kube }}"
 
-    - name: Copy Files
-      ansible.builtin.copy:
-        src: "{{ item.src }}"
+    - name: Process Templates
+      ansible.builtin.template:
         dest: "{{ item.dest }}"
+        src: "{{ item.src }}"
         mode: u+rw
       loop:
-        - src: "{{ dir_localroot }}/ddclient.conf"
-          dest: "{{ dir_config }}"
-
-    - name: Pull Container Images
-      containers.podman.podman_image:
-        name: "{{ item }}"
-      loop:
-        - "{{ img_ddclient }}"
-
-    - name: Create Pod Quadlet
-      containers.podman.podman_pod:
-        name: "{{ pod }}"
-        state: quadlet
-        userns: "keep-id:uid=1654"
-        quadlet_options:
-          - "ServiceName={{ pod }}"
+        - { "src": "ddclient.conf.j2", "dest": "{{ file_config }}" }
+        - { "src": "kube.yml.j2", "dest": "{{ file_kube }}" }
 
     - name: Create ddclient Quadlet
-      containers.podman.podman_container:
-        name: ddclient
-        image: "{{ img_ddclient }}"
+      containers.podman.podman_play:
+        kube_file: "{{ file_kube }}"
         state: quadlet
-        read_only: true
-        pod: "{{ pod }}.pod"
-        env:
-          PUID: 1654
-          TZ: "US/Eastern"
-        mounts:
-          - type=tmpfs,destination=/tmp
-        volumes:
-          - "{{ dir_config }}:/config:Z"
+        recreate: true
+        username: "{{ dockerhub_username }}"
+        password: "{{ dockerhub_password }}"
+        quadlet_filename: "{{ pod }}"
+        quadlet_file_mode: '0640'
         quadlet_options:
           - "AutoUpdate=registry"
-          - "Pull=newer"
-          - "ReadOnly=true"
           - |
 
             [Unit]
@@ -92,7 +75,7 @@
     - name: Start and Enable Pod / Containers
       ansible.builtin.systemd_service:
         daemon_reload: true
-        name: "{{ pod }}.service"
+        name: "{{ pod }}"
         scope: user
         enabled: true
         state: restarted

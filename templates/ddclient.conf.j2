@@ -1,0 +1,18 @@
+# https://github.com/ddclient/ddclient/blob/main/ddclient.conf.in
+daemon=600                      # check every 600 seconds
+syslog=yes                      # log update msgs to syslog
+#mail=root                      # mail all msgs to root
+mail-failure=root               # mail failed update msgs to root
+pid=@runstatedir@/ddclient.pid  # record PID in file.
+
+use=web
+web=https://ipinfo.io/ip
+
+##
+## NameCheap (namecheap.com)
+##
+protocol=namecheap
+server=dynamicdns.park-your-domain.com
+login=mikeandwan.us
+password={{ namecheap_api_key }}
+www,@,photos,media
