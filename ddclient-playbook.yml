@@ -72,6 +72,9 @@
             [Install]
             WantedBy=multi-user.target default.target
 
+            [Service]
+            Restart=on-failure
+
     - name: Start and Enable Pod / Containers
       ansible.builtin.systemd_service:
         daemon_reload: true
